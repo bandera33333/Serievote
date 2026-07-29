@@ -97,7 +97,7 @@ const series = [
   "Boy, Girl, Etc... 2019",
   "Braqueurs : La Série 2021",
   "Braquo 2009",
-  "Breaking Bad 2008"
+  "Breaking Bad 2008",
     "Bref 2011",
   "Brokenwood 2014",
   "Brooklyn Nine Nine 2013",
@@ -130,7 +130,7 @@ const series = [
   "Chesapeake Shores 2016",
   "Chica Vampiro : Mortel D'Être Un Vampire 2013",
   "Chicago Fire 2012",
-  "Chicago Police Department 2014"
+  "Chicago Police Department 2014",
   "Chicago Med 2015",
   "Chicago Justice 2017",
   "Chicago Hope : La Vie À Tout Prix 1994",
