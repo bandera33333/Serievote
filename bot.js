@@ -13,53 +13,95 @@ http.createServer((req, res) => {
   res.end('Bot Telegram actif');
 }).listen(PORT);
 
-// Mémoire des votes
+// Votes
 const votes = {};
 const utilisateurs = new Set();
 
-bot.onText(/\/start/, (msg) => {
-  const options = {
-    reply_markup: {
-      inline_keyboard: series.map((serie) => [
-        {
-          text: serie,
-          callback_data: serie
-        }
-      ])
+const seriesParPage = 10;
+
+function afficherPage(chatId, page) {
+  const debut = page * seriesParPage;
+  const fin = debut + seriesParPage;
+
+  const liste = series.slice(debut, fin);
+
+  const boutons = liste.map((serie) => [
+    {
+      text: serie,
+      callback_data: `vote_${serie}`
     }
-  };
+  ]);
+
+  const navigation = [];
+
+  if (page > 0) {
+    navigation.push({
+      text: "⬅️ Précédent",
+      callback_data: `page_${page - 1}`
+    });
+  }
+
+  if (fin < series.length) {
+    navigation.push({
+      text: "Suivant ➡️",
+      callback_data: `page_${page + 1}`
+    });
+  }
+
+  if (navigation.length > 0) {
+    boutons.push(navigation);
+  }
 
   bot.sendMessage(
-    msg.chat.id,
-    "🎬 Choisis ta série préférée :",
-    options
+    chatId,
+    `🎬 Choisis ta série préférée (page ${page + 1}) :`,
+    {
+      reply_markup: {
+        inline_keyboard: boutons
+      }
+    }
   );
+}
+
+bot.onText(/\/start/, (msg) => {
+  afficherPage(msg.chat.id, 0);
 });
 
-bot.on('callback_query', (query) => {
-  const userId = query.from.id;
 
-  if (utilisateurs.has(userId)) {
-    bot.answerCallbackQuery(query.id, {
-      text: "❌ Tu as déjà voté !"
-    });
+bot.on('callback_query', (query) => {
+  const data = query.data;
+  const chatId = query.message.chat.id;
+
+  if (data.startsWith("page_")) {
+    const page = Number(data.replace("page_", ""));
+    afficherPage(chatId, page);
     return;
   }
 
-  const serie = query.data;
+  if (data.startsWith("vote_")) {
+    const serie = data.replace("vote_", "");
+    const userId = query.from.id;
 
-  utilisateurs.add(userId);
+    if (utilisateurs.has(userId)) {
+      bot.answerCallbackQuery(query.id, {
+        text: "❌ Tu as déjà voté !"
+      });
+      return;
+    }
 
-  votes[serie] = (votes[serie] || 0) + 1;
+    utilisateurs.add(userId);
 
-  bot.answerCallbackQuery(query.id, {
-    text: "✅ Vote enregistré !"
-  });
+    votes[serie] = (votes[serie] || 0) + 1;
 
-  bot.sendMessage(
-    query.message.chat.id,
-    `Merci pour ton vote pour : ${serie} 🎬`
-  );
+    bot.answerCallbackQuery(query.id, {
+      text: "✅ Vote enregistré !"
+    });
+
+    bot.sendMessage(
+      chatId,
+      `Merci pour ton vote pour : ${serie} 🎬`
+    );
+  }
 });
 
 console.log("Bot démarré !");
